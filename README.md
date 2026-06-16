@@ -1,243 +1,177 @@
-[Email Validator](https://apify.com/giovannibiancia/email-validator?fpr=data)
+[Email Validator](https://apify.com/accurate_pouch/email-validator?fpr=data)
 
-Advanced email validation actor for Apify platform with comprehensive verification capabilities including SMTP verification, MX record checks, and disposable email detection.
-
-## 🚀 Features
-
-- **📝 Format Validation**: RFC 5322 compliant email format checking
-- **🌐 MX Records Check**: Validates domain has valid mail exchange records
-- **✉️ SMTP Verification**: Real-time email existence verification via SMTP
-- **🔍 Provider Detection**: Identifies free and disposable email providers
-- **💡 Smart Suggestions**: Suggests corrections for common domain typos
-- **⚡ Batch Processing**: Efficiently processes large email lists
-- **🛡️ Rate Limiting**: Built-in delays to prevent abuse
-- **📊 Detailed Reporting**: Comprehensive validation results and statistics
-
-## 📋 Input Configuration
-
-### Required Fields
-
-- **`emails`** (array): List of email addresses to validate
-
-### Optional Settings
-
-- **`checkSMTP`** (boolean, default: `true`): Enable SMTP verification
-- **`rejectDisposable`** (boolean, default: `false`): Mark disposable emails as invalid
-- **`batchSize`** (integer, default: `50`): Number of emails per batch (1-100)
-- **`delayBetweenChecks`** (number, default: `0.1`): Delay between validations in seconds
-- **`maxRetries`** (integer, default: `2`): Maximum retry attempts for SMTP connections
-- **`timeout`** (integer, default: `10`): SMTP connection timeout in seconds
-
-## 📤 Output Format
-
-Each email validation returns a detailed result object:
-
-```
-{
-  "email": "user@example.com",
-  "original_email": "User@Example.com",
-  "is_valid": true,
-  "valid_format": true,
-  "valid_mx": true,
-  "valid_smtp": true,
-  "is_free": false,
-  "is_disposable": false,
-  "domain": "example.com",
-  "errors": [],
-  "warnings": [],
-  "suggestions": [],
-  "mx_records": ["10:mail.example.com"],
-  "smtp_response": "250 OK",
-  "validation_time": 1642789123.456
-}
-```
-
-### Final Summary Object
-
-```
-{
-  "summary": true,
-  "total_emails": 1000,
-  "valid_emails": 847,
-  "invalid_emails": 153,
-  "free_emails": 234,
-  "disposable_emails": 12,
-  "validation_rate": 84.7,
-  "processing_time_seconds": 45.2,
-  "emails_per_second": 22.1,
-  "common_errors": {
-    "Invalid email format": 89,
-    "Domain has no MX records": 34,
-    "Email address does not exist": 30
-  },
-  "options_used": {...},
-  "checks_performed": [...]
-}
-```
-
-## 🎯 Use Cases
-
-### Marketing & Lead Generation
-
-- **Email List Cleaning**: Remove invalid emails before campaigns
-- **Lead Qualification**: Verify prospect contact information
-- **Bounce Rate Reduction**: Improve email deliverability rates
-
-### E-commerce & SaaS
-
-- **User Registration**: Validate emails during signup
-- **Account Recovery**: Ensure password reset emails reach users
-- **Newsletter Management**: Clean subscriber lists
-
-### Data Quality & Compliance
-
-- **Database Maintenance**: Regular email list hygiene
-- **GDPR Compliance**: Verify contact consent accuracy
-- **CRM Integration**: Enhance customer data quality
-
-## 🛠️ Technical Details
-
-### Validation Process
-
-1. **Format Check**: RFC 5322 regex validation
-2. **Domain Extraction**: Parse email domain
-3. **Provider Classification**: Check against free/disposable lists
-4. **MX Records**: DNS lookup for mail exchange records
-5. **SMTP Verification**: Connect to mail server and verify recipient
-6. **Result Compilation**: Generate comprehensive validation report
-
-### Supported Email Providers
-
-#### Free Providers (200+)
-
-- Gmail, Yahoo, Outlook, Hotmail, AOL
-- iCloud, Protonmail, Yandex, Mail.ru
-- And many more regional providers
-
-#### Disposable Providers (100+)
-
-- 10minutemail, Tempmail, Guerrillamail
-- Mailinator, YOPmail, Maildrop
-- Comprehensive list of temporary email services
-
-### Performance & Limits
-
-- **Throughput**: Up to 50+ emails/second (depending on SMTP response times)
-- **Batch Processing**: Configurable batch sizes (1-100 emails)
-- **Rate Limiting**: Customizable delays to prevent blocking
-- **Retry Logic**: Automatic retries for failed connections
-- **Timeout Handling**: Configurable connection timeouts
-
-## 🚨 Important Notes
-
-### SMTP Verification Considerations
-
-- **Rate Limits**: Some mail servers implement rate limiting
-- **False Positives**: Yahoo and some providers may return positive responses for non-existent emails
-- **Temporary Failures**: Network issues may cause temporary validation failures
-- **Privacy**: SMTP checks involve connecting to external mail servers
-
-### Best Practices
-
-1. **Start Small**: Test with small batches first
-2. **Monitor Results**: Check for high error rates or timeouts
-3. **Respect Limits**: Use appropriate delays between checks
-4. **Handle Failures**: Plan for temporary network issues
-5. **Regular Updates**: Disposable provider lists change frequently
-
-## 📊 Example Usage
-
-### Basic Email Validation
-
-```
-{
-  "emails": [
-    "user@gmail.com",
-    "test@example.com",
-    "invalid@nonexistent.xyz"
-  ]
-}
-```
-
-### Advanced Configuration
-
-```
-{
-  "emails": ["user1@example.com", "user2@test.com"],
-  "checkSMTP": true,
-  "rejectDisposable": true,
-  "batchSize": 25,
-  "delayBetweenChecks": 0.2,
-  "maxRetries": 3,
-  "timeout": 15
-}
-```
-
-### Large Scale Processing
-
-```
-{
-  "emails": [...], // 10,000+ emails
-  "checkSMTP": false, // Faster processing
-  "batchSize": 100,
-  "delayBetweenChecks": 0.05
-}
-```
-
-## 🔧 Error Handling
-
-The actor handles various error scenarios gracefully:
-
-- **Invalid Input**: Clear error messages for malformed input
-- **Network Issues**: Retry logic for temporary failures
-- **Rate Limiting**: Automatic backoff and retry
-- **Server Errors**: Detailed error reporting and logging
-- **Timeout Handling**: Configurable timeouts with fallback
-
-## 📈 Performance Optimization
-
-### Speed vs Accuracy Trade-offs
-
-- **Fast Mode**: Disable SMTP checking for format/MX validation only
-- **Balanced Mode**: Default settings with moderate SMTP verification
-- **Thorough Mode**: Enable all checks with retries for maximum accuracy
-
-### Batch Size Recommendations
-
-- **Small Lists** (< 100): Batch size 10-25
-- **Medium Lists** (100-1000): Batch size 25-50
-- **Large Lists** (1000+): Batch size 50-100
-
-## 🆘 Support & Troubleshooting
-
-### Common Issues
-
-1. **High Invalid Rate**: Check for data quality issues in input
-2. **Slow Processing**: Reduce batch size or increase delays
-3. **SMTP Timeouts**: Increase timeout values or reduce retries
-4. **Memory Issues**: Process very large lists in smaller chunks
-
-### Getting Help
-
-- Check actor logs for detailed error information
-- Review input format and configuration options
-- Contact Apify support for platform-specific issues
-
-## 📄 License & Terms
-
-This actor is provided as-is for email validation purposes. Users are responsible for:
-
-- Complying with applicable data protection laws
-- Respecting email provider terms of service
-- Using validated data ethically and legally
-- Maintaining data security and privacy
+Validate 10,000 emails in minutes. SMTP mailbox check, disposable domain detection, catch-all flagging, role-based detection, deliverability scoring, and typo suggestions — all in one actor.
 
 ---
 
-## 🏷️ Tags
+## Why this exists
 
-`email` `validation` `smtp` `mx-records` `verification` `email-checker` `disposable-email` `bulk-validation` `data-quality` `lead-generation`
+The most popular email validator on Apify has 743 users but only a 3.3/5 rating. The second most popular has 142 users and a 2.0/5 rating. Users are stuck choosing between unreliable tools and overpriced ones.
+
+This actor does everything the existing ones do, plus:
+
+- **Disposable domain detection** — flags mailinator, guerrillamail, and 5,300+ throwaway providers
+- **Catch-all detection** — identifies servers that accept all addresses (less trustworthy)
+- **Role-based detection** — flags info@, admin@, support@ addresses
+- **Deliverability score** — 0-100 composite score based on all checks
+- **Typo suggestions** — catches gmial.com, hotmal.com, and 20+ common misspellings
+- **20 emails** — test it before committing
 
 ---
 
-*Built with ❤️ for the Apify platform*
+## Quick start
+
+```
+{
+    "emails": [
+        "real-user@gmail.com",
+        "fake@mailinator.com",
+        "info@example.com"
+    ],
+    "checkSmtp": true,
+    "checkDisposable": true
+}
+```
+
+---
+
+## Competitor comparison
+
+| Feature | xmiso (743 users, 3.3★) | api-ninja (204 users, 5★) | **This actor** |
+| --- | --- | --- | --- |
+| SMTP mailbox check | Unknown | Yes | Yes |
+| MX record check | Unknown | Yes | Yes |
+| Disposable detection | No | No | Yes (200+ domains) |
+| Catch-all detection | No | No | Yes |
+| Role-based detection | No | No | Yes |
+| Free provider flagging | No | No | Yes |
+| Deliverability score | No | No | Yes (0-100) |
+| Typo suggestions | No | No | Yes |
+| Per-email error detail | No | Limited | Yes |
+| Dry run mode | No | No | Yes |
+| Free tier | No | Limited | **20 emails free** |
+| Price per email | $0.0025 | $0.0025 | $0.003 |
+
+---
+
+## Input
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `emails` | array | *(optional)* | List of email addresses to validate. Or use `emailsUrl`. |
+| `emailsUrl` | string | *(optional)* | URL to CSV or JSON file with emails. One per line, or JSON array. For 10K+ lists. |
+| `checkSmtp` | boolean | `true` | Connect to mail server and verify mailbox exists |
+| `checkDisposable` | boolean | `true` | Check against 5,300+ disposable domain list |
+| `timeout` | integer | `10000` | SMTP timeout in ms (3,000–30,000) |
+| `maxConcurrency` | integer | `5` | Parallel validations (1–20). Keep low to avoid mail server blocks |
+| `googleSheetsId` | string | *(optional)* | Export results to this Google Sheet (spreadsheet ID) |
+| `googleServiceAccountKey` | string | *(optional)* | Google Service Account JSON key for Sheets export |
+| `dryRun` | boolean | `false` | Preview results without charges |
+
+---
+
+## Output
+
+Each email produces one item in the dataset:
+
+```
+{
+    "email": "user@gmail.com",
+    "valid": true,
+    "deliverable": true,
+    "disposable": false,
+    "catchAll": false,
+    "roleBased": false,
+    "freeProvider": true,
+    "deliverabilityScore": 90,
+    "checks": {
+        "syntax": "pass",
+        "domain": "pass",
+        "mxRecord": "pass",
+        "smtp": "pass"
+    },
+    "suggestion": null,
+    "smtpDetail": "gmail.com is a major provider that blocks SMTP verification probes. Email syntax, domain, and MX are valid — deliverability cannot be confirmed via SMTP for this provider.",
+    "error": null
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `email` | Normalised email (lowercased, trimmed) |
+| `valid` | Syntax + domain + MX all pass |
+| `deliverable` | SMTP check confirms mailbox exists (`null` if SMTP skipped or inconclusive) |
+| `disposable` | Domain is a known throwaway provider |
+| `catchAll` | Mail server accepts all addresses (less trustworthy) |
+| `roleBased` | Address is a generic role (info@, admin@, support@) |
+| `freeProvider` | Domain is a free email provider (gmail, yahoo, etc) |
+| `deliverabilityScore` | 0-100 composite score across all checks |
+| `checks` | Per-check status: `pass`, `fail`, `unknown`, or `skip` |
+| `suggestion` | Typo correction if detected (e.g., gmial.com → gmail.com) |
+| `smtpDetail` | Plain English explanation of the SMTP result — why it passed, failed, or was inconclusive |
+| `error` | Error message if a check failed, otherwise `null` |
+
+### Deliverability score breakdown
+
+| Check | Points |
+| --- | --- |
+| Syntax valid | +20 |
+| Domain exists | +20 |
+| MX records found | +20 |
+| SMTP confirms mailbox | +30 (unknown = +15) |
+| Not disposable | +5 |
+| Not role-based | +5 |
+| Catch-all server | -10 |
+
+---
+
+## How SMTP validation works
+
+1. Connect to the domain's mail server (MX record, port 25)
+2. Send `EHLO` greeting
+3. Send `MAIL FROM` with a verification address
+4. Send `RCPT TO` with the target email
+5. Read the response — `250` means the mailbox exists, `550` means it doesn't
+6. Disconnect without sending any email
+
+No email is ever sent. This is standard practice used by every email validation service.
+
+---
+
+## Pricing
+
+**$0.003 per email validated** (pay-per-event pricing).
+
+- Charged per email processed, regardless of valid/invalid result.
+- Errors and dry runs are never charged.
+- 1,000 emails = $3.00
+- 10,000 emails = $30.00
+
+---
+
+## Limitations
+
+- **SMTP checks are blocked by major providers.** Gmail, Outlook, Yahoo, and other large providers block SMTP verification probes. For these domains, SMTP returns `unknown` and the `smtpDetail` field explains why. Syntax, domain, and MX checks still run — deliverability just can't be confirmed via SMTP for those providers.
+- **Catch-all servers always return 250.** If a server accepts all addresses, the SMTP check will say "deliverable" even for nonexistent mailboxes. The `catchAll` flag warns you about this.
+- **Not real-time delivery guarantee.** A "deliverable" result means the mailbox existed at check time. The inbox could be full, disabled, or deleted minutes later.
+- **Disposable domain list covers 5,300+ providers** from the canonical open-source list. New throwaway services appear constantly — coverage is good but not 100%.
+- **Rate limiting.** Keep `maxConcurrency` at 5 or below for best results. Higher values may trigger temporary blocks from mail servers.
+
+---
+
+## Related Tools by manchittlab
+
+- **[Broken Link Checker](https://apify.com/accurate_pouch/broken-link-checker)** — Recursively crawl your website and find every broken link, 404, redirect, and timeout.
+- **[Domain Age Checker](https://apify.com/accurate_pouch/domain-age-checker)** — Bulk RDAP domain age, registration, and expiration lookup.
+- **[Lighthouse Auditor](https://apify.com/accurate_pouch/lighthouse-auditor)** — Batch Lighthouse audits for performance, SEO, accessibility, and Core Web Vitals.
+- **[Image Processor](https://apify.com/accurate_pouch/image-processor)** — Batch resize, convert to WebP/AVIF, compress, watermark. Powered by sharp.
+- **[Tech Stack Detector](https://apify.com/accurate_pouch/tech-stack-detector)** — Detect frameworks, CMS, analytics, CDN, and 100+ technologies for any URL.
+- **[Google Sheets Reader & Writer](https://apify.com/accurate_pouch/google-sheets-rw)** — Read any Google Sheet to JSON or append rows. Service Account auth.
+
+---
+
+## Run on Apify
+
+[![Run on Apify](https://images.apifyusercontent.com/gTvnlJwwVJ1NebWERlWLuTx2RlOJmA4EocV-NvWtCY4/w:1800/cb:1/aHR0cHM6Ly9hcGlmeS5jb20vc3RhdGljL3J1bi1vbi1hcGlmeS5zdmc.webp)](https://apify.com/accurate_pouch/email-validator)
+
+No setup needed. Click above to run in the cloud. $0.003 per operation.
