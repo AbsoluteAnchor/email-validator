@@ -1,177 +1,143 @@
-[Email Validator](https://apify.com/accurate_pouch/email-validator?fpr=data)
+[Email Validator](https://apify.com/junipr/email-validator?fpr=data)
 
-Validate 10,000 emails in minutes. SMTP mailbox check, disposable domain detection, catch-all flagging, role-based detection, deliverability scoring, and typo suggestions — all in one actor.
+# Email Validator
 
----
+## What does Email Validator do?
 
-## Why this exists
+Email Validator performs multi-layer validation on any list of email addresses to determine if they are real, deliverable, and safe to use. It checks email format against RFC 5322, verifies the domain has valid MX DNS records, connects to the mail server via SMTP to confirm the mailbox exists, detects disposable/temporary email providers (30,000+ domains), flags role-based addresses (admin@, info@, support@), identifies free email providers (Gmail, Yahoo, Outlook), and optionally detects catch-all domains.
 
-The most popular email validator on Apify has 743 users but only a 3.3/5 rating. The second most popular has 142 users and a 2.0/5 rating. Users are stuck choosing between unreliable tools and overpriced ones.
+Each email receives a quality score from 0 to 100 and a human-readable reason explaining the result. The actor also suggests corrections for common domain typos (e.g., `gmial.com` to `gmail.com`). Use it to clean email lists before outreach campaigns, validate sign-up forms, or enrich contact data with deliverability intelligence.
 
-This actor does everything the existing ones do, plus:
+## Features
 
-- **Disposable domain detection** — flags mailinator, guerrillamail, and 5,300+ throwaway providers
-- **Catch-all detection** — identifies servers that accept all addresses (less trustworthy)
-- **Role-based detection** — flags info@, admin@, support@ addresses
-- **Deliverability score** — 0-100 composite score based on all checks
-- **Typo suggestions** — catches gmial.com, hotmal.com, and 20+ common misspellings
-- **20 emails** — test it before committing
+- **Format validation** — RFC 5322 compliant email format checking
+- **MX record verification** — Confirms the domain has valid mail exchange DNS records
+- **SMTP mailbox verification** — Connects to the mail server and checks if the specific mailbox exists using RCPT TO
+- **Disposable domain detection** — Checks against 30,000+ known disposable and temporary email providers
+- **Role-based address detection** — Flags addresses like admin@, info@, support@, noreply@, sales@, webmaster@
+- **Free provider detection** — Identifies Gmail, Yahoo, Hotmail, Outlook, and other free email services
+- **Catch-all detection** — Optionally checks if the domain accepts all email addresses regardless of the local part
+- **Typo suggestions** — Detects common domain misspellings and suggests corrections (gmial.com, yaho.com, outloo.com)
+- **Quality scoring** — 0-100 score based on format, MX, SMTP, disposable status, role status, and provider type
+- **Batch processing** — Validate hundreds of emails concurrently with configurable parallelism
+- **Automatic deduplication** — Duplicate emails are removed before processing
 
----
-
-## Quick start
-
-```
-{
-    "emails": [
-        "real-user@gmail.com",
-        "fake@mailinator.com",
-        "info@example.com"
-    ],
-    "checkSmtp": true,
-    "checkDisposable": true
-}
-```
-
----
-
-## Competitor comparison
-
-| Feature | xmiso (743 users, 3.3★) | api-ninja (204 users, 5★) | **This actor** |
-| --- | --- | --- | --- |
-| SMTP mailbox check | Unknown | Yes | Yes |
-| MX record check | Unknown | Yes | Yes |
-| Disposable detection | No | No | Yes (200+ domains) |
-| Catch-all detection | No | No | Yes |
-| Role-based detection | No | No | Yes |
-| Free provider flagging | No | No | Yes |
-| Deliverability score | No | No | Yes (0-100) |
-| Typo suggestions | No | No | Yes |
-| Per-email error detail | No | Limited | Yes |
-| Dry run mode | No | No | Yes |
-| Free tier | No | Limited | **20 emails free** |
-| Price per email | $0.0025 | $0.0025 | $0.003 |
-
----
-
-## Input
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `emails` | array | *(optional)* | List of email addresses to validate. Or use `emailsUrl`. |
-| `emailsUrl` | string | *(optional)* | URL to CSV or JSON file with emails. One per line, or JSON array. For 10K+ lists. |
-| `checkSmtp` | boolean | `true` | Connect to mail server and verify mailbox exists |
-| `checkDisposable` | boolean | `true` | Check against 5,300+ disposable domain list |
-| `timeout` | integer | `10000` | SMTP timeout in ms (3,000–30,000) |
-| `maxConcurrency` | integer | `5` | Parallel validations (1–20). Keep low to avoid mail server blocks |
-| `googleSheetsId` | string | *(optional)* | Export results to this Google Sheet (spreadsheet ID) |
-| `googleServiceAccountKey` | string | *(optional)* | Google Service Account JSON key for Sheets export |
-| `dryRun` | boolean | `false` | Preview results without charges |
-
----
-
-## Output
-
-Each email produces one item in the dataset:
+## Input Configuration
 
 ```
 {
-    "email": "user@gmail.com",
-    "valid": true,
-    "deliverable": true,
-    "disposable": false,
-    "catchAll": false,
-    "roleBased": false,
-    "freeProvider": true,
-    "deliverabilityScore": 90,
-    "checks": {
-        "syntax": "pass",
-        "domain": "pass",
-        "mxRecord": "pass",
-        "smtp": "pass"
-    },
-    "suggestion": null,
-    "smtpDetail": "gmail.com is a major provider that blocks SMTP verification probes. Email syntax, domain, and MX are valid — deliverability cannot be confirmed via SMTP for this provider.",
-    "error": null
+  "emails": ["john@company.com", "test@gmail.com", "fake@temp-mail.io"],
+  "checkMx": true,
+  "checkSmtp": true,
+  "checkDisposable": true,
+  "checkRole": true,
+  "checkFreeProvider": true,
+  "checkCatchAll": false,
+  "smtpTimeout": 10000,
+  "maxConcurrency": 5
 }
 ```
 
-| Field | Description |
-| --- | --- |
-| `email` | Normalised email (lowercased, trimmed) |
-| `valid` | Syntax + domain + MX all pass |
-| `deliverable` | SMTP check confirms mailbox exists (`null` if SMTP skipped or inconclusive) |
-| `disposable` | Domain is a known throwaway provider |
-| `catchAll` | Mail server accepts all addresses (less trustworthy) |
-| `roleBased` | Address is a generic role (info@, admin@, support@) |
-| `freeProvider` | Domain is a free email provider (gmail, yahoo, etc) |
-| `deliverabilityScore` | 0-100 composite score across all checks |
-| `checks` | Per-check status: `pass`, `fail`, `unknown`, or `skip` |
-| `suggestion` | Typo correction if detected (e.g., gmial.com → gmail.com) |
-| `smtpDetail` | Plain English explanation of the SMTP result — why it passed, failed, or was inconclusive |
-| `error` | Error message if a check failed, otherwise `null` |
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `emails` | string[] | `["test@gmail.com", "invalid@nonexistent-domain-12345.com"]` | Email addresses to validate |
+| `checkMx` | boolean | `true` | Verify domain has MX DNS records |
+| `checkSmtp` | boolean | `true` | Verify mailbox exists via SMTP RCPT TO |
+| `checkDisposable` | boolean | `true` | Check against 30,000+ disposable email domains |
+| `checkRole` | boolean | `true` | Detect role-based addresses (admin@, info@, etc.) |
+| `checkFreeProvider` | boolean | `true` | Detect free email providers (Gmail, Yahoo, etc.) |
+| `checkCatchAll` | boolean | `false` | Detect catch-all domains (slower, extra SMTP connection) |
+| `smtpTimeout` | integer | `10000` | SMTP connection timeout in milliseconds (3,000-30,000) |
+| `maxConcurrency` | integer | `5` | Maximum emails to validate simultaneously (1-20) |
 
-### Deliverability score breakdown
+## Output Format
 
-| Check | Points |
-| --- | --- |
-| Syntax valid | +20 |
-| Domain exists | +20 |
-| MX records found | +20 |
-| SMTP confirms mailbox | +30 (unknown = +15) |
-| Not disposable | +5 |
-| Not role-based | +5 |
-| Catch-all server | -10 |
+Each validated email produces one result:
 
----
+```
+{
+  "email": "john@company.com",
+  "isValid": true,
+  "formatValid": true,
+  "mxValid": true,
+  "smtpValid": true,
+  "isDisposable": false,
+  "isRole": false,
+  "isFreeProvider": false,
+  "isCatchAll": null,
+  "mxRecords": [
+    { "exchange": "mx1.company.com", "priority": 10 },
+    { "exchange": "mx2.company.com", "priority": 20 }
+  ],
+  "suggestion": null,
+  "score": 100,
+  "reason": "Valid email address",
+  "scrapedAt": "2026-03-11T12:00:00.000Z"
+}
+```
 
-## How SMTP validation works
+Example of an invalid email:
 
-1. Connect to the domain's mail server (MX record, port 25)
-2. Send `EHLO` greeting
-3. Send `MAIL FROM` with a verification address
-4. Send `RCPT TO` with the target email
-5. Read the response — `250` means the mailbox exists, `550` means it doesn't
-6. Disconnect without sending any email
+```
+{
+  "email": "user@temp-mail.io",
+  "isValid": true,
+  "formatValid": true,
+  "mxValid": true,
+  "smtpValid": null,
+  "isDisposable": true,
+  "isRole": false,
+  "isFreeProvider": false,
+  "isCatchAll": null,
+  "mxRecords": [{ "exchange": "mx.temp-mail.io", "priority": 10 }],
+  "suggestion": null,
+  "score": 55,
+  "reason": "Valid email with warnings: disposable email domain",
+  "scrapedAt": "2026-03-11T12:00:00.000Z"
+}
+```
 
-No email is ever sent. This is standard practice used by every email validation service.
+## Usage Examples / Use Cases
 
----
+- **Email list cleaning** — Validate your mailing list before campaigns to remove invalid, disposable, and risky addresses and improve deliverability
+- **Sign-up form validation** — Integrate via API to verify email addresses in real time during user registration
+- **Lead qualification** — Score incoming leads by email quality, filtering out disposable addresses and prioritizing business domains over free providers
+- **CRM data hygiene** — Periodically validate contact emails in your CRM to flag outdated or invalid addresses
+- **Fraud prevention** — Block disposable and temporary email addresses from account creation to reduce fake sign-ups
+- **Email deliverability auditing** — Check MX records and SMTP responses for your own domain to diagnose sending issues
 
 ## Pricing
 
-**$0.003 per email validated** (pay-per-event pricing).
+This actor uses Pay-Per-Event (PPE) pricing: **$1.90 per 1,000 emails validated** ($0.0019 per event).
 
-- Charged per email processed, regardless of valid/invalid result.
-- Errors and dry runs are never charged.
-- 1,000 emails = $3.00
-- 10,000 emails = $30.00
+Pricing includes all platform compute costs — no hidden fees.
 
----
+## FAQ
 
-## Limitations
+### Why does SMTP verification sometimes return null?
 
-- **SMTP checks are blocked by major providers.** Gmail, Outlook, Yahoo, and other large providers block SMTP verification probes. For these domains, SMTP returns `unknown` and the `smtpDetail` field explains why. Syntax, domain, and MX checks still run — deliverability just can't be confirmed via SMTP for those providers.
-- **Catch-all servers always return 250.** If a server accepts all addresses, the SMTP check will say "deliverable" even for nonexistent mailboxes. The `catchAll` flag warns you about this.
-- **Not real-time delivery guarantee.** A "deliverable" result means the mailbox existed at check time. The inbox could be full, disabled, or deleted minutes later.
-- **Disposable domain list covers 5,300+ providers** from the canonical open-source list. New throwaway services appear constantly — coverage is good but not 100%.
-- **Rate limiting.** Keep `maxConcurrency` at 5 or below for best results. Higher values may trigger temporary blocks from mail servers.
+SMTP verification connects to port 25 on the target mail server. Some hosting environments (including Apify's infrastructure) may restrict outbound port 25 connections. When this happens, SMTP verification returns `null` (inconclusive) rather than `false`. The email still receives partial credit in the quality score. MX record verification and all other checks still work normally.
 
----
+### What is the quality score based on?
 
-## Related Tools by manchittlab
+The score (0-100) is calculated from six factors: valid format (30 points), MX records present (30 points), SMTP verification passed (20 points), not a disposable domain (10 points), not role-based (5 points), and business domain vs free provider (5 points). An email with valid format, working MX, confirmed SMTP, from a business domain scores 100.
 
-- **[Broken Link Checker](https://apify.com/accurate_pouch/broken-link-checker)** — Recursively crawl your website and find every broken link, 404, redirect, and timeout.
-- **[Domain Age Checker](https://apify.com/accurate_pouch/domain-age-checker)** — Bulk RDAP domain age, registration, and expiration lookup.
-- **[Lighthouse Auditor](https://apify.com/accurate_pouch/lighthouse-auditor)** — Batch Lighthouse audits for performance, SEO, accessibility, and Core Web Vitals.
-- **[Image Processor](https://apify.com/accurate_pouch/image-processor)** — Batch resize, convert to WebP/AVIF, compress, watermark. Powered by sharp.
-- **[Tech Stack Detector](https://apify.com/accurate_pouch/tech-stack-detector)** — Detect frameworks, CMS, analytics, CDN, and 100+ technologies for any URL.
-- **[Google Sheets Reader & Writer](https://apify.com/accurate_pouch/google-sheets-rw)** — Read any Google Sheet to JSON or append rows. Service Account auth.
+### How accurate is disposable email detection?
 
----
+The actor checks against a database of 30,000+ known disposable and temporary email domains. The list covers major providers like Guerrilla Mail, Temp Mail, Mailinator, and thousands of lesser-known services. New disposable providers appear constantly, so some very new services may not be in the list.
 
-## Run on Apify
+### Can I validate thousands of emails in one run?
 
-[![Run on Apify](https://images.apifyusercontent.com/gTvnlJwwVJ1NebWERlWLuTx2RlOJmA4EocV-NvWtCY4/w:1800/cb:1/aHR0cHM6Ly9hcGlmeS5jb20vc3RhdGljL3J1bi1vbi1hcGlmeS5zdmc.webp)](https://apify.com/accurate_pouch/email-validator)
+Yes. The actor deduplicates your list automatically and processes emails concurrently based on `maxConcurrency`. For large lists (10,000+), increase the run timeout and consider disabling `checkSmtp` and `checkCatchAll` for faster processing since those require network connections per email.
 
-No setup needed. Click above to run in the cloud. $0.003 per operation.
+### What does the suggestion field do?
+
+If the actor detects a likely typo in the domain part of the email (e.g., `user@gmial.com` instead of `user@gmail.com`), it returns a corrected suggestion in the `suggestion` field. This helps you fix common data entry errors rather than simply marking the email as invalid.
+
+## Related Actors
+
+- [Disposable Email Checker](https://apify.com/junipr/disposable-email-checker) — Focused disposable domain detection if you only need that check
+- [Contact Info Scraper](https://apify.com/junipr/contact-info-scraper) — Extract emails from websites, then validate them with this actor
+- [Domain WHOIS Lookup](https://apify.com/junipr/domain-whois-lookup) — Get WHOIS registration and DNS data for email domains
+- [Yellow Pages Scraper](https://apify.com/junipr/yellow-pages-scraper) — Scrape business listings with contact emails to validate
+- [RAG Web Extractor](https://apify.com/junipr/rag-web-extractor) — Extract structured content from websites for AI and data pipelines
